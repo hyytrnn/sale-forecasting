@@ -11,6 +11,7 @@ eda/
 models/
 runs/
 __pycache__/
+*.egg-info/
 .ipynb_checkpoints/
 
 # Keep derived documentation and EDA artifacts versioned.

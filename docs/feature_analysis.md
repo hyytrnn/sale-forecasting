@@ -8,11 +8,11 @@ flowchart LR
     B --> C[Cutoff before target month]
     C --> D[Rolling aggregates at multiple levels]
     D --> E[Recency and share ratios]
-    E --> F[CatBoost positive-sale classifier]
-    E --> G[CatBoost positive-quantity regressor]
-    F --> H[Probability × quantity × tuned scale]
+    E --> F[Experimental positive-sale classifier]
+    E --> G[Positive-quantity regressor]
+    F --> H[Tunable probability modulation]
     G --> H
-    H --> I[Non-negative monthly prediction]
+    H --> I[Validation-selected prediction rule]
 ```
 
 For example, an April target uses observations through **2025-03-31**. The December validation target uses observations through **2025-11-30**. This cutoff is applied before joining the feature tables to the target pairs.
@@ -70,13 +70,15 @@ The model receives 109 columns in the recorded run. Categorical columns include 
 1. a binary positive-sale label (`quantity > 0`) for `CatBoostClassifier`;
 2. the raw positive quantity for `CatBoostRegressor` with MAPE loss.
 
-The final prediction multiplies the classifier probability by the positive-quantity estimate, applies the validation-tuned scale, rounds to an integer, and clips negative values to zero.
+The implementation can multiply classifier probability by the positive-quantity estimate. However, the recorded validation selected `proba_power=0.0`, `threshold=0.0`, `blend=0.0`, and `scale=0.67`. Therefore classifier probability did not affect the recorded final prediction. Its effective formula was approximately `round(max(0, regressor_quantity) * 0.67)`.
 
-The feature table is shared by both model stages. The classifier consumes all sampled pairs with a binary target (`quantity > 0`). The regressor consumes only positive rows, so it learns the amount sold conditional on a sale occurring. This decomposition separates the sparse “will this pair sell?” decision from the “how much will it sell?” estimate.
+The feature table is shared by both model stages. The classifier consumes all sampled pairs with a binary target (`quantity > 0`). The regressor consumes only positive rows, so it learns the amount sold conditional on a sale occurring. This hurdle design remains an experiment supported by the code; the validation-selected recorded configuration behaves as a scaled regressor.
 
 ## Leakage and sparsity controls
 
 - Feature tables are built from dates `<= cutoff`; the target month is never used to construct its own predictors.
 - The seven known anomaly dates are removed before monthly aggregation and valid-day normalization.
-- Negative examples are sampled from the candidate location-item grid and anti-joined against observed positive pairs.
+- Negative examples are sampled from the candidate location-item grid and anti-joined against the complete set of observed positive keys before the positive rows are downsampled.
 - Numeric missing values are filled with zero and categorical missing values with `unknown`, allowing cold or sparse pairs to remain in the prediction grid.
+
+The timestamp cutoff protects transaction aggregates, but `items.parquet` may be a final metadata snapshot. Point-in-time correctness of `sale_status`, price, and category fields still needs source-data verification.

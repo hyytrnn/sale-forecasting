@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sales-forecasting-portfolio"
+version = "0.1.0"
+description = "Large-scale monthly retail demand forecasting with Polars and CatBoost"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "numpy==1.26.4",
+  "pandas==2.2.3",
+  "polars==1.33.1",
+  "pyarrow==19.0.1",
+  "matplotlib==3.10.7",
+  "catboost==1.2.8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
