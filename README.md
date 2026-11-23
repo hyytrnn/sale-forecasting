@@ -2,6 +2,20 @@
 
 This repository contains a reproducible sales forecasting notebook and the Python modules that the notebook writes before executing the pipeline. The task is to estimate the monthly quantity sold for every `(location, item_id)` pair.
 
+## Project snapshot
+
+| | Details |
+| --- | --- |
+| Problem | Monthly demand forecasting for retail location–item pairs |
+| Data scale | 41.5M transaction rows, 1,038 locations, 29,823 item records |
+| Modeling | Two-stage CatBoost: positive-sale classification + positive-quantity regression |
+| Feature design | Multi-level rolling demand, recency, categorical metadata, and share features |
+| Validation | December 2025 holdout with a custom non-zero MAPE score |
+| Recorded score | 60.2592 on the full December evaluation; validation tuning score 60.2692 |
+| Deliverables | Notebook, reproducible EDA script, charts, ranked tables, and feature documentation |
+
+This is a strong portfolio project for demonstrating data engineering, exploratory analysis, feature engineering, and machine learning on a large tabular forecasting problem. The raw transaction files remain local because they contain transaction-level fields and are too large for a public source repository.
+
 The main notebook is [`sale_forecasting.ipynb`](./sale_forecasting.ipynb). It is organized as a set of code-generation cells followed by two execution cells.
 
 ## Project structure
@@ -100,6 +114,15 @@ After validation, the models are retrained through December 2025. January 2026 p
 
 ## Notebook execution
 
+### Install dependencies
+
+```bash
+python -m venv .venv
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
 Run the notebook cells in order:
 
 1. Write the path configuration and pipeline modules.
@@ -114,6 +137,8 @@ python scripts/run_eda.py --data-dir data --output-dir reports/eda
 
 For a full model run, ensure the Parquet files are available and enough memory and storage exist for the daily cache, model files, validation report, and full-grid submission.
 
+The full model implementation is intentionally kept in the notebook cells that generate the pipeline modules. The committed [`scripts/run_eda.py`](./scripts/run_eda.py) is the lightweight, directly runnable analysis entry point; it does not retrain the full CatBoost models by default.
+
 ## Recorded outputs
 
 The completed notebook run recorded:
@@ -126,6 +151,13 @@ The completed notebook run recorded:
 
 The run writes model checkpoints, `validation_report.csv`, December and January submission pickles, and a JSON metrics report under the configured `runs/<run_name>/` directory. The final normalization step writes `submission_fixed.pkl`.
 
+## Limitations and next improvements
+
+- Raw Parquet data is not published, so a reviewer needs an equivalent private data copy to reproduce model training.
+- The notebook records one time-based validation month; a stronger production setup would add rolling-origin backtesting across several months.
+- The repository documents feature construction but does not yet include SHAP or permutation-importance plots from a fitted final model.
+- The next packaging step would move the generated training modules into versioned Python files and add automated smoke tests.
+
 ## License
 
-The notebook declares the Apache 2.0 license.
+This project is released under the Apache 2.0 license; see [`LICENSE`](./LICENSE).
