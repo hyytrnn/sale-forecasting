@@ -13,6 +13,13 @@ runs/
 __pycache__/
 .ipynb_checkpoints/
 
+# Keep derived documentation and EDA artifacts versioned.
+!reports/
+!reports/eda/
+!reports/eda/**
+!docs/
+!docs/**
+
 # Local environments
 .venv/
 venv/

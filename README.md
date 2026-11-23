@@ -19,6 +19,7 @@ The notebook creates these modules in the working directory:
 | `eda.py` | Produces descriptive tables, outlier reports, rankings, and plots. |
 | `evaluator.py` | Compares a prediction pickle with an answer pickle using the project score. |
 | `fix_submission_pickle.py` | Normalizes submission columns and dtypes before delivery. |
+| `scripts/run_eda.py` | Rebuilds the daily cache and generates the tracked EDA tables and charts. |
 
 The notebook itself is the source of these modules; they are not duplicated as separate files in this repository.
 
@@ -49,6 +50,19 @@ The recorded run found 1,038 locations, 6,850 active items, and 7,110,300 possib
 - PNG plots for daily totals, active pairs, weekday totals, top locations, top items, quantity distribution, active-day distribution, and pair activity versus total quantity.
 
 Outputs are written under `eda/`. The notebook defines this EDA module but the main training cell does not execute it automatically; run `python eda.py` after the daily cache exists when EDA artifacts are needed.
+
+This repository also includes the generated report under [`reports/eda/`](./reports/eda/). The report is based on the local Parquet archive and contains the overview, ranked tables, daily and weekday summaries, and PNG charts. The observed EDA snapshot covers 35,324,041 non-zero pair-days, 3,144,558 sold location-item pairs, 1,038 locations, and 20,393 items.
+
+Key charts:
+
+- [`daily_total_quantity.png`](./reports/eda/daily_total_quantity.png)
+- [`weekday_quantity.png`](./reports/eda/weekday_quantity.png)
+- [`top_locations_quantity.png`](./reports/eda/top_locations_quantity.png)
+- [`top_items_quantity.png`](./reports/eda/top_items_quantity.png)
+- [`quantity_distribution.png`](./reports/eda/quantity_distribution.png)
+- [`pair_active_days_distribution.png`](./reports/eda/pair_active_days_distribution.png)
+
+The feature definitions and their modeling roles are documented in [`docs/feature_analysis.md`](./docs/feature_analysis.md).
 
 ## Feature engineering
 
@@ -92,7 +106,13 @@ Run the notebook cells in order:
 2. Execute `train_predict_decval_v2.py` with CPU training, December validation, 700 classifier iterations, 900 regressor iterations, and 40-location prediction batches.
 3. Run `fix_submission_pickle.py` to normalize the final submission.
 
-For a smaller local test, first run `make_subset.py` and use its generated paths with reduced iteration and sample settings. For a full run, ensure the Parquet files are available and enough memory and storage exist for the daily cache, model files, validation report, and full-grid submission.
+For a smaller local test, first run `make_subset.py` and use its generated paths with reduced iteration and sample settings. To reproduce the tracked EDA artifacts from the project root, run:
+
+```bash
+python scripts/run_eda.py --data-dir data --output-dir reports/eda
+```
+
+For a full model run, ensure the Parquet files are available and enough memory and storage exist for the daily cache, model files, validation report, and full-grid submission.
 
 ## Recorded outputs
 

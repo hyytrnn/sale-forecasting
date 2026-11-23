@@ -1,0 +1,2 @@
+min_date,max_date,nonzero_pair_days,pairs,locations,items,total_quantity,mean_quantity,median_quantity,p90_quantity,p99_quantity,max_quantity
+2025-01-01,2025-12-31,35324041,3144558,1038,20393,65985689.0,1.868010769209559,1.0,3.0,14.0,2497.0
