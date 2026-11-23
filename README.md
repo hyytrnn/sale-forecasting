@@ -69,12 +69,18 @@ This repository also includes the generated report under [`reports/eda/`](./repo
 
 Key charts:
 
-- [`daily_total_quantity.png`](./reports/eda/daily_total_quantity.png)
-- [`weekday_quantity.png`](./reports/eda/weekday_quantity.png)
-- [`top_locations_quantity.png`](./reports/eda/top_locations_quantity.png)
-- [`top_items_quantity.png`](./reports/eda/top_items_quantity.png)
-- [`quantity_distribution.png`](./reports/eda/quantity_distribution.png)
-- [`pair_active_days_distribution.png`](./reports/eda/pair_active_days_distribution.png)
+<table>
+<tr>
+<td><img src="./reports/eda/daily_total_quantity.png" alt="Daily total quantity" width="480"></td>
+<td><img src="./reports/eda/quantity_distribution.png" alt="Quantity distribution" width="480"></td>
+</tr>
+<tr>
+<td><img src="./reports/eda/weekday_quantity.png" alt="Quantity by weekday" width="480"></td>
+<td><img src="./reports/eda/top_locations_quantity.png" alt="Top locations by quantity" width="480"></td>
+</tr>
+</table>
+
+Additional charts and the complete CSV tables are available in [`reports/eda/`](./reports/eda/), including [`top_items_quantity.png`](./reports/eda/top_items_quantity.png) and [`pair_active_days_distribution.png`](./reports/eda/pair_active_days_distribution.png).
 
 The feature definitions and their modeling roles are documented in [`docs/feature_analysis.md`](./docs/feature_analysis.md).
 
