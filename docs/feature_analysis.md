@@ -2,6 +2,21 @@
 
 The forecasting target is monthly `quantity` for each `(location, item_id)` pair. Features are computed using data available before the target month so that the model does not see future sales.
 
+```mermaid
+flowchart LR
+    A[Purchase transactions] --> B[Daily quantity by location and item]
+    B --> C[Cutoff before target month]
+    C --> D[Rolling aggregates at multiple levels]
+    D --> E[Recency and share ratios]
+    E --> F[CatBoost positive-sale classifier]
+    E --> G[CatBoost positive-quantity regressor]
+    F --> H[Probability × quantity × tuned scale]
+    G --> H
+    H --> I[Non-negative monthly prediction]
+```
+
+For example, an April target uses observations through **2025-03-31**. The December validation target uses observations through **2025-11-30**. This cutoff is applied before joining the feature tables to the target pairs.
+
 ## Feature groups
 
 | Group | Examples | Why it is useful |
@@ -24,6 +39,30 @@ The forecasting target is monthly `quantity` for each `(location, item_id)` pair
 - Last-sale timestamps are converted to `days_since_sale` relative to the feature cutoff.
 - Monthly targets are normalized for excluded anomaly days by scaling valid-day totals to the full calendar month.
 
+## Naming convention and formulas
+
+Most numeric features follow this pattern:
+
+```text
+{level}_qty_{window}d
+{level}_active_days_{window}d
+{level}_days_since_sale
+```
+
+Here, `level` can be `pair`, `item`, `location`, `cat1`, `cat2`, `brand`, or `loc_cat1`; `window` is one of `30`, `60`, `90`, `180`, or `365`. The all-history variants use `_qty_all` and `_active_days_all`.
+
+The notebook also creates these explicit ratios:
+
+```text
+pair_recent_share_30_90     = pair_qty_30d / (pair_qty_90d + 1)
+item_recent_share_30_90     = item_qty_30d / (item_qty_90d + 1)
+location_recent_share_30_90 = location_qty_30d / (location_qty_90d + 1)
+pair_item_share_90d         = pair_qty_90d / (item_qty_90d + 1)
+pair_location_share_90d     = pair_qty_90d / (location_qty_90d + 1)
+```
+
+The `+1` stabilizes ratios when the denominator has little or no recent history. A `days_since_sale` value of `999` represents a missing historical sale date.
+
 ## Model input and target handling
 
 The model receives 109 columns in the recorded run. Categorical columns include location, item, category, brand, manufacturer, and size. The target is split into:
@@ -32,3 +71,12 @@ The model receives 109 columns in the recorded run. Categorical columns include 
 2. the raw positive quantity for `CatBoostRegressor` with MAPE loss.
 
 The final prediction multiplies the classifier probability by the positive-quantity estimate, applies the validation-tuned scale, rounds to an integer, and clips negative values to zero.
+
+The feature table is shared by both model stages. The classifier consumes all sampled pairs with a binary target (`quantity > 0`). The regressor consumes only positive rows, so it learns the amount sold conditional on a sale occurring. This decomposition separates the sparse “will this pair sell?” decision from the “how much will it sell?” estimate.
+
+## Leakage and sparsity controls
+
+- Feature tables are built from dates `<= cutoff`; the target month is never used to construct its own predictors.
+- The seven known anomaly dates are removed before monthly aggregation and valid-day normalization.
+- Negative examples are sampled from the candidate location-item grid and anti-joined against observed positive pairs.
+- Numeric missing values are filled with zero and categorical missing values with `unknown`, allowing cold or sparse pairs to remain in the prediction grid.
